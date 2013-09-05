@@ -1,3 +1,12 @@
+/**
+ * <h3>JS DOM library</h3>
+ * <q>Utilities methods & DOM elements decorator</q>
+ * @example
+ * jArgon.trim('  a string to trim   ');
+ * var jargonObj = jArgon('div > div.foo .bar #jargon');
+ * jargonObj.getElementsByAttribute('.fuzz[bar]');
+ * @namespace _jArgon
+ */
 ;(function( window, document, undefined ) {
   'use strict';
 
@@ -22,8 +31,18 @@
   // Utilities, private
   _.extend( _j,
     {
+      /**
+       * Call native API method if exists, use fallback instead
+       * @function trim
+       * @memberof _jArgon
+       * @param {String} str - The string to trim
+       * @returns {String} The new trimmed string
+       */
       trim: (function() {
-        return stringProto.trim ||
+        return stringProto.trim ?
+              function( str ) {
+                return stringProto.trim.call( str );
+              } :
               // Source: http://blog.stevenlevithan.com/
               function( str ) {
                 return str.replace(/^\s\s*/, '')
@@ -33,6 +52,8 @@
 
       /**
        * Convert pseudo arrays (eg `arguments`, `nodeList`) to arrays
+       * @function toArray
+       * @memberof _jArgon
        * @param {PseudoArray} pseudoArray - The pseudoArray to convert
        * @returns {Array} The new array
        */
@@ -45,6 +66,8 @@
       /**
        * Check if an element has a given name
        * Valid name : 'div'
+       * @private
+       * @name hasName
        * @param {Element} elem - The element to validate
        * @param {String} name - The element name
        * @returns {Boolean} True if match, false otherwise
@@ -56,6 +79,8 @@
       /**
        * Check if an element has a given class name
        * Valid class name : 'foo'
+       * @private
+       * @name hasClassName
        * @param {Element} elem - The element to validate
        * @param {String} className - The class name
        * @returns {Boolean} True if match, false otherwise
@@ -72,6 +97,8 @@
        * Valid selectors are :
        * #foo, div, .foo, .foo[href], div[href], div.foo, 
        * div[href="bar"], .foo[href="fuzz"]
+       * @private
+       * @name hasSelector
        * @param {Element} elem - The element to validate
        * @param {String} selector - The selector
        * @returns {Boolean} True if match, false otherwise
@@ -141,6 +168,8 @@
        * Return an empty array if mismatch
        * Valid selectors are :
        * 'div.foo' or '.foo' or 'foo'
+       * @private
+       * @name getElementsByClassName
        * @param {String} selector - The selector
        * @param {Element} [elem] - The root element on which launch the search
        * Default to `document`
@@ -185,6 +214,8 @@
        * Return an empty array if mismatch
        * Valid selectors are :
        * 'a[href]' or '.foo[href]' or 'a[href="bar"]' or '.foo[href="bar"]'
+       * @private
+       * @name getElementsByAttribute
        * @param {String} selector - The selector
        * @param {Element} [elem] - The root element on which launch the search
        * Default to `document`
@@ -239,6 +270,7 @@
        * Based on a "document only bottom-up algorithm"
        * Valid selectors are :
        * 'div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon'
+       * @private
        * @param {String} selector - The selector
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
@@ -274,7 +306,7 @@
 
             for ( ; i < candidatesL; i += 1, j = iBottom ) {
               parent = candidates[ i ];
-              while ( parent = parent.parentNode ) {
+              while ( ( parent = parent.parentNode ) && ( parent.nodeType === 1 ) ) {
                 if ( directChild.test( steps[ j ] ) ) {
                   // '>' selector, jump to the next step
                   // & give the parent only one chance to match
@@ -339,10 +371,15 @@
     constructor: jArgon,
 
     /**
-     * Check if jargon instance has a given element name
-     * If the jargon instance contains multiple elements, there will be a
+     * Check if jargon instance has a given element's name
+     * If the jargon instance contains multiple elements, there will be a<br />
      * boolean for each of them into the returned array
-     * Valid name : 'div'
+     * @example
+     * // Valid name:
+     * 'div'
+     * @public
+     * @function
+     * @name hasName
      * @param {String} name - The element name
      * @returns {Array|Boolean} True if match, false otherwise
      */
@@ -352,9 +389,14 @@
 
     /**
      * Check if jargon instance has a given class name
-     * If the jargon instance contains multiple elements, there will be a
+     * If the jargon instance contains multiple elements, there will be a<br />
      * boolean for each of them into the returned array
-     * Valid class name : 'foo'
+     * @example
+     * // Valid class name:
+     * 'foo'
+     * @public
+     * @function
+     * @name hasClassName
      * @param {String} className - The class name
      * @returns {Array|Boolean} True if match, false otherwise
      */
@@ -364,11 +406,15 @@
 
     /**
      * Check if jargon instance has a given selector
-     * If the jargon instance contains multiple elements, there will be a
+     * If the jargon instance contains multiple elements, there will be a<br />
      * boolean for each of them into the returned array
-     * Valid selectors are :
-     * #foo, div, .foo, .foo[href], div[href], div.foo, 
-     * div[href="bar"], .foo[href="fuzz"]
+     * @example
+     * // Valid selectors are :
+     * '#foo', 'div', '.foo', '.foo[href]', 'div[href]', 'div.foo', 
+     * 'div[href="bar"]', '.foo[href="fuzz"]'
+     * @public
+     * @function
+     * @name hasSelector
      * @param {String} selector - The selector
      * @returns {Array|Boolean} True if match, false otherwise
      */
@@ -377,36 +423,59 @@
     },
 
     /**
-     * Get the child elements of a jargon instance on a given class name.
-     * If the jargon instance contains multiple elements, the resulting 
+     * Get the child elements of a jargon instance which match a class name.
+     * If the jargon instance contains multiple elements, the resulting <br />
      * child elements are merged into a single array.
-     * Valid selectors are :
+     * @example
+     * // Valid selectors are :
      * 'div.foo' or '.foo' or 'foo'
+     * @public
+     * @function
+     * @name getElementsByClassName
      * @param {String} selector - The selector
-     * @returns {Array} Elements that match the selector or empty array if mismatch
+     * @returns {jArgon} jArgon object containing matching elements
      */
     getElementsByClassName: function( selector ) {
       return _j.getElements.call( this, selector, _j.getElementsByClassName );
     },
 
     /**
-     * Get the child elements of a jargon instance on a given attribute.
-     * If the jargon instance contains multiple elements, the resulting 
+     * Get the child elements of a jargon instance which match an attribute.
+     * If the jargon instance contains multiple elements, the resulting <br />
      * child elements are merged into a single array.
-     * Valid selectors are :
+     * @example
+     * // Valid selectors are :
      * 'a[href]' or '.foo[href]' or 'a[href="bar"]' or '.foo[href="bar"]'
+     * @public
+     * @function
+     * @name getElementsByAttribute
      * @param {String} selector - The selector
-     * @returns {Array} Elements that match the selector or empty array if mismatch
+     * @returns {jArgon} jArgon object containing matching elements
      */
     getElementsByAttribute: function( selector ) {
       return _j.getElements.call( this, selector, _j.getElementsByAttribute );
     }
   };
 
-  // use a decorator to closure jArgon ...
+  // Use a decorator to closure jArgon ...
+
+  /**
+   * <strong>jArgon initializer</strong><br />
+   * Query document's elements on a CSS selector chain and return
+   * a jArgon instance which wraps matching elements.<br />
+   * - Based on a "document only bottom-up algorithm" -
+   * @example
+   * // a valid selector chain:
+   * 'div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon'
+   * @function
+   * @name jArgon
+   * @param {String} selector - The selector
+   * @returns {jArgon} jArgon object containing matching elements
+   */
   decorator = function( selector ) {
     return new jArgon( _j.querySelectorAll( selector ) );
   };
+
   // ... and expose utilities
   _.extend( decorator,
     {
