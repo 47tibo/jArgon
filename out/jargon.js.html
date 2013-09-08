@@ -49,11 +49,20 @@
     _slice = arrayProto.slice;
 
   // Jargon Initializer
+  // @param {Array|HTMLElement} elems - An array of HTMLElements or a single one
+  // If called whithout param, return an empty jargon object
   _j = jArgon  = function( elems ) {
     this.length = 0;
+
+    elems = elems || [];
+
+    if ( elems.length == null ) {
+      // HTMLElement
+      elems = [ elems ];
+    }
     // Array#concat way behind Array.proto.push.apply in FF, see:
     // http://jsperf.com/array-prototype-push-apply-vs-concat
-    // However, elems must be of type: Array, which is the case here
+    // Note that elems must be of type Array or will throw an excep in some browsers
     _push.apply( this, elems );
   };
 
@@ -74,8 +83,8 @@
               } :
               // Source: http://blog.stevenlevithan.com/
               function( str ) {
-                return str.replace(/^\s\s*/, '')
-                          .replace(/\s\s*$/, '');
+                return str.replace( /^\s\s*/, '' )
+                          .replace( /\s\s*$/, '' );
               };
       })(),
 
@@ -91,7 +100,7 @@
         try {
           array = _slice.call( pseudoArray, 0 );
         } catch( e ) {
-           array = [];
+          array = [];
           // exception thrown & fallback in IE8-
           _push.apply( array, pseudoArray );
         }
@@ -124,16 +133,21 @@
        * @param {String} name - The attribute's name
        * @returns {String|null} The attribute's value (possibly '') or null if not defined
        */
-       getAttribute: function( elem, name ) {
+      getAttribute: function( elem, name ) {
         var value = elem.getAttribute( name );
         if ( value != null ) {
           if ( _j.isIE7 && /src|href|action/.test( name ) ) {
-            // IE7- returns canonical URLs, thus use fallback
-            value = value.match(/\/([^\/]+)$/)[1];
+            if ( _j.trim( value ) ) {
+              // IE7- returns canonical URLs, thus use fallback
+              value = value.match( /\/([^\/]+)$/ )[ 1 ];
+            }
           }
+        } else {
+          // maybe some browser return undefined, thus fix it
+          value = null;
         }
         return value;
-       },
+      },
 
       /**
        * Check if an element has a given name
@@ -177,20 +191,20 @@
        */
       hasSelector: function( elem, selector ) {
         var chunker,
-          match = selector.match(/(\.?[^\[]+\[[^\]]+\])|(\.)/);
+          match = selector.match( /(\.?[^\[]+\[[^\]]+\])|(\.)/ );
 
         if ( match !== null ) {
           // .toto or .toto[href="bar"] or toto[href="foo"]
           if ( match[1] ) {
             // .toto[href] or bar[href] or bar[href="dsds"] : by attribute
             chunker = /([^\[]+)\[([^=\]]+)(?:="([^"]+))?/;
-            match = selector.match(chunker);
-            if ( /\./.test(match[1]) ) {
+            match = selector.match( chunker );
+            if ( /\./.test( match[1] ) ) {
               // .toto[href] or .toto[href="bar"]
               if ( !match[3] ) {
                 // .toto[href]
-                return _j.hasClassName( elem, match[1].slice(1) )  &&
-                       !!_j.getAttribute( elem, match[2] );
+                return _j.hasClassName( elem, match[1].slice(1) ) &&
+                       _j.getAttribute( elem, match[2] ) !== null;
               } else {
                 // .toto[href="bar"]
                 return _j.hasClassName( elem, match[1].slice(1) ) &&
@@ -201,7 +215,7 @@
               if ( !match[3] ) {
                 // bar[href]
                 return _j.hasName( elem, match[1] ) &&
-                       !!_j.getAttribute( elem, match[2] );
+                       _j.getAttribute( elem, match[2] ) !== null;
               } else {
                 // bar[href="bar"]
                 return _j.hasName( elem, match[1] ) &&
@@ -224,7 +238,7 @@
         } else {
           // byid or bytagname
           // '#foo' or div' or 'p'
-          match = selector.match(/#([^#]+)/);
+          match = selector.match( /#([^#]+)/ );
           if ( match !== null ) {
             // #foo
             return _j.getAttribute( elem, 'id' ) === match[1];
@@ -271,10 +285,9 @@
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
       getElementsByClassName: function( selector, elem ) {
-        var elems, l,
+        var elems, l, elemsA,
           i = 0,
-          elemsA,
-          match = selector.match(/([^ ]+)?\.([^ ]+)/);
+          match = selector.match( /([^ ]+)?\.([^ ]+)/ );
 
         elem = elem || document;
 
@@ -295,10 +308,10 @@
         elemsA = _j.toArray( elems );
 
         for ( l = elemsA.length; i &lt; l; i += 1 ) {
-          if ( !_j.hasClassName( elemsA[i], selector ) ) {
+          if ( !_j.hasClassName( elemsA[ i ], selector ) ) {
             elemsA.splice( i, 1 );
             i -= 1;
-            l = elemsA.length;
+            l -= 1;
           }
         }
         return elemsA;
@@ -317,33 +330,31 @@
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
       getElementsByAttribute: function( selector, elem ) {
-        var elems, l, iElem,
+        var elems, l, iElem, elemsA,
           i = 0,
-          elemsA,
           chunker = /([^\[]+)\[([^=\]]+)(?:="([^"]+))?/,
           match = selector.match( chunker );
 
         elem = elem || document;
 
         if ( match !== null ) {
-          if ( /\./.test(match[1]) ) {
+          if ( /\./.test( match[1] ) ) {
             // by classname .foo[href]
             elems = _j.getElementsByClassName( match[1].slice(1), elem );
           } else {
             //by tag  foo[href]
-            elems = elem.getElementsByTagName(match[1]);
+            elems = elem.getElementsByTagName( match[1] );
           }
 
           // filter the set on the attribute
           // Array#splice has cool perfs: http://jsperf.com/splice-vs-custom-fn
 
-          // convert to Array
           elemsA = _j.toArray( elems );
 
           for ( l = elemsA.length; i &lt; l ; i += 1 ) {
             iElem = elemsA[ i ];
-            if ( _j.getAttribute( iElem, match[2] ) == null ) {
-              // attribute null or undefined, remove elem from set
+            if ( _j.getAttribute( iElem, match[2] ) === null ) {
+              // attribute null, remove elem from set
               elemsA.splice( i, 1 );
               i -= 1;
             } else {
@@ -371,19 +382,19 @@
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
       querySelectorAll: function( selector ) {
-        var iBottom,
+        var iBottom, stepsL,
           candidatesSelector, candidates, candidatesL,
           category, parent, directChild, i, j,
           chunker = /[^ \[]+\[[^ \]]+\]|(?:[^ .]+)?\.[^ ]+|[^ ]+/g,
-          steps = selector.match( chunker ),
-          stepsL = steps.length;
+          steps = selector.match( chunker );
 
-        if ( stepsL ) {
+        if ( steps ) {
           // valid selector
+          stepsL = steps.length;
 
           // get candidates array data, iff any
           candidatesSelector = steps[ stepsL - 1 ];
-          category = candidatesSelector.match(/#([^ ]+)|([^\[]+\[[^\]]+\])|(\.)/);
+          category = candidatesSelector.match( /#([^ ]+)|([^\[]+\[[^\]]+\])|(\.)/ );
           candidates = category ?
                  ( category[1] && [ document.getElementById( category[1] ) ] ) ||
                  ( category[2] && _j.getElementsByAttribute( candidatesSelector ) ) ||
@@ -397,7 +408,7 @@
             candidatesL = candidates.length;
             i = 0;
             // update the steps array
-            steps = steps.slice(0, -1);
+            steps = steps.slice( 0, -1 );
             j = iBottom = steps.length - 1;
 
             for ( ; i &lt; candidatesL; i += 1, j = iBottom ) {
@@ -431,7 +442,7 @@
                 // candidate don't match:
                 // remove it & refresh loop props before next iteration
                 candidates.splice( i, 1 );
-                candidatesL = candidates.length;
+                candidatesL -= 1;
                 i -= 1;
               }
             }
@@ -447,8 +458,9 @@
 
       hasAny: function( criterion, checkFn ) {
         var i = 0,
-          match = new Array( this.length );
-        for ( ; i &lt; this.length; i += 1 ) {
+          l = this.length,
+          match = new Array( l );
+        for ( ; i &lt; l; i += 1 ) {
           match[ i ] = checkFn( this[i], criterion );
         }
         if ( i === 1 ) {
@@ -458,9 +470,9 @@
       },
 
       getElements: function( selector, getElementsFn ) {
-        var i = 0,
+        var i = 0, l,
           elems = [];
-        for ( ; i &lt; this.length; i += 1 ) {
+        for ( l = this.length; i &lt; l; i += 1 ) {
           _push.apply( elems, getElementsFn( selector, this[ i ] ) );
         }
         return new jArgon( elems );
@@ -470,6 +482,23 @@
   // Jargon Interface
   jArgon.prototype = {
     constructor: jArgon,
+
+    /**
+     * Iterate over a jargon instance, executing a function for each elements.
+     * The function context is a jargon object wrapping the element itself.
+     * @public
+     * @function
+     * @name each
+     * @param {Function} fn - The function which will be executed recursively
+     * @returns {jArgon} The jargon instance on which the method is called
+     */
+     each: function( fn ) {
+      var i = 0, l;
+      for ( l = this.length ; i &lt; l; i += 1 ) {
+        fn.call( new jArgon( this[ i ] ) );
+      }
+      return this;
+     },
 
     /**
      * Check if a jargon instance has a given element's name.
@@ -564,17 +593,40 @@
    * &lt;strong>jArgon initializer&lt;/strong>&lt;br />
    * Query document's elements on a CSS selector chain and return
    * a jArgon instance which wraps matching elements.&lt;br />
-   * - Based on a "document only bottom-up algorithm" -
+   * - Based on a "document only bottom-up algorithm" -&lt;br />
+   * Or, wrap a single HTMLElement or a NodeList into a jargon instance.&lt;br />
+   * If the selector mismatch or if the element unvalid, an empty jArgon object is returned.
    * @example
+   * var jargonObj;
    * // a valid selector chain:
-   * 'div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon'
+   * jargonObj = jArgon('div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon');
+   * // elem is a valid HTMLElement
+   * jargonObj = jArgon( elem );
+   * // elems is a NodeList
+   * jargonObj = jArgon( elems );
    * @function
    * @name jArgon
-   * @param {String} selector - The selector
-   * @returns {jArgon} jArgon object containing matching elements
+   * @param {String|HTMLElement|NodeList} selector - The selector
+   * @returns {jArgon} jArgon object containing matching elements or the passed element(s)
    */
   decorator = function( selector ) {
-    return new jArgon( _j.querySelectorAll( selector ) );
+    if ( typeof selector === 'string' ) {
+      return new jArgon( _j.querySelectorAll( selector ) );
+    } else if ( selector ) {
+      if ( selector.length && selector[0] != null ) {
+        // NodeList
+        return selector[0].nodeType === 1 ?
+            new jArgon( _j.toArray( selector ) ) :
+            new jArgon();
+      } else {
+        // HTMLElement
+        return selector.nodeType === 1 ?
+            new jArgon( selector ) :
+            new jArgon();
+      }
+    } else {
+      return new jArgon();
+    }
   };
 
   // ... and expose utilities
@@ -596,13 +648,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Namespaces</h3><ul><li><a href="_jArgon.html">_jArgon</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getElementsByAttribute">getElementsByAttribute</a></li><li><a href="global.html#getElementsByClassName">getElementsByClassName</a></li><li><a href="global.html#hasClassName">hasClassName</a></li><li><a href="global.html#hasName">hasName</a></li><li><a href="global.html#hasSelector">hasSelector</a></li><li><a href="global.html#jArgon">jArgon</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Namespaces</h3><ul><li><a href="_jArgon.html">_jArgon</a></li></ul><h3>Global</h3><ul><li><a href="global.html#each">each</a></li><li><a href="global.html#getElementsByAttribute">getElementsByAttribute</a></li><li><a href="global.html#getElementsByClassName">getElementsByClassName</a></li><li><a href="global.html#hasClassName">hasClassName</a></li><li><a href="global.html#hasName">hasName</a></li><li><a href="global.html#hasSelector">hasSelector</a></li><li><a href="global.html#jArgon">jArgon</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.0-dev</a> on Sun Sep 08 2013 11:01:36 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.0-dev</a> on Sun Sep 08 2013 19:04:57 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

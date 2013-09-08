@@ -164,3 +164,14 @@ test( "$el.getElementsByClassName('.foo')", function() {
     'looking for child elements of a jargon object (holding many elements) on a given tag & a classname ' +
     'return the corresponding child elements');
 });
+
+var count = 0;
+jArgon('.bar').each(function() {
+  if ( this.hasClassName('bunk') ) {
+    count += 1;
+  }
+});
+
+test( "$el.each(fn);", function() {
+  deepEqual( count, 2, 'each method works!!! ');
+});

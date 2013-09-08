@@ -22,8 +22,17 @@
     _slice = arrayProto.slice;
 
   // Jargon Initializer
+  // @param {Array|HTMLElement} elems - An array of HTMLElements or a single one
+  // If called whithout param, return an empty jargon object
   _j = jArgon  = function( elems ) {
     this.length = 0;
+
+    elems = elems || [];
+
+    if ( elems.length == null ) {
+      // HTMLElement
+      elems = [ elems ];
+    }
     // Array#concat way behind Array.proto.push.apply in FF, see:
     // http://jsperf.com/array-prototype-push-apply-vs-concat
     // Note that elems must be of type Array or will throw an excep in some browsers
@@ -422,8 +431,9 @@
 
       hasAny: function( criterion, checkFn ) {
         var i = 0,
-          match = new Array( this.length );
-        for ( ; i < this.length; i += 1 ) {
+          l = this.length,
+          match = new Array( l );
+        for ( ; i < l; i += 1 ) {
           match[ i ] = checkFn( this[i], criterion );
         }
         if ( i === 1 ) {
@@ -433,9 +443,9 @@
       },
 
       getElements: function( selector, getElementsFn ) {
-        var i = 0,
+        var i = 0, l,
           elems = [];
-        for ( ; i < this.length; i += 1 ) {
+        for ( l = this.length; i < l; i += 1 ) {
           _push.apply( elems, getElementsFn( selector, this[ i ] ) );
         }
         return new jArgon( elems );
@@ -445,6 +455,23 @@
   // Jargon Interface
   jArgon.prototype = {
     constructor: jArgon,
+
+    /**
+     * Iterate over a jargon instance, executing a function for each elements.
+     * The function context is a jargon object wrapping the element itself.
+     * @public
+     * @function
+     * @name each
+     * @param {Function} fn - The function which will be executed recursively
+     * @returns {jArgon} The jargon instance on which the method is called
+     */
+     each: function( fn ) {
+      var i = 0, l;
+      for ( l = this.length ; i < l; i += 1 ) {
+        fn.call( new jArgon( this[ i ] ) );
+      }
+      return this;
+     },
 
     /**
      * Check if a jargon instance has a given element's name.
@@ -539,17 +566,40 @@
    * <strong>jArgon initializer</strong><br />
    * Query document's elements on a CSS selector chain and return
    * a jArgon instance which wraps matching elements.<br />
-   * - Based on a "document only bottom-up algorithm" -
+   * - Based on a "document only bottom-up algorithm" -<br />
+   * Or, wrap a single HTMLElement or a NodeList into a jargon instance.<br />
+   * If the selector mismatch or if the element unvalid, an empty jArgon object is returned.
    * @example
+   * var jargonObj;
    * // a valid selector chain:
-   * 'div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon'
+   * jargonObj = jArgon('div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon');
+   * // elem is a valid HTMLElement
+   * jargonObj = jArgon( elem );
+   * // elems is a NodeList
+   * jargonObj = jArgon( elems );
    * @function
    * @name jArgon
-   * @param {String} selector - The selector
-   * @returns {jArgon} jArgon object containing matching elements
+   * @param {String|HTMLElement|NodeList} selector - The selector
+   * @returns {jArgon} jArgon object containing matching elements or the passed element(s)
    */
   decorator = function( selector ) {
-    return new jArgon( _j.querySelectorAll( selector ) );
+    if ( typeof selector === 'string' ) {
+      return new jArgon( _j.querySelectorAll( selector ) );
+    } else if ( selector ) {
+      if ( selector.length && selector[0] != null ) {
+        // NodeList
+        return selector[0].nodeType === 1 ?
+            new jArgon( _j.toArray( selector ) ) :
+            new jArgon();
+      } else {
+        // HTMLElement
+        return selector.nodeType === 1 ?
+            new jArgon( selector ) :
+            new jArgon();
+      }
+    } else {
+      return new jArgon();
+    }
   };
 
   // ... and expose utilities
