@@ -26,7 +26,7 @@
     this.length = 0;
     // Array#concat way behind Array.proto.push.apply in FF, see:
     // http://jsperf.com/array-prototype-push-apply-vs-concat
-    // However, elems must be of type: Array, which is the case here
+    // Note that elems must be of type Array or will throw an excep in some browsers
     _push.apply( this, elems );
   };
 
@@ -47,8 +47,8 @@
               } :
               // Source: http://blog.stevenlevithan.com/
               function( str ) {
-                return str.replace(/^\s\s*/, '')
-                          .replace(/\s\s*$/, '');
+                return str.replace( /^\s\s*/, '' )
+                          .replace( /\s\s*$/, '' );
               };
       })(),
 
@@ -64,7 +64,7 @@
         try {
           array = _slice.call( pseudoArray, 0 );
         } catch( e ) {
-           array = [];
+          array = [];
           // exception thrown & fallback in IE8-
           _push.apply( array, pseudoArray );
         }
@@ -97,16 +97,21 @@
        * @param {String} name - The attribute's name
        * @returns {String|null} The attribute's value (possibly '') or null if not defined
        */
-       getAttribute: function( elem, name ) {
+      getAttribute: function( elem, name ) {
         var value = elem.getAttribute( name );
         if ( value != null ) {
           if ( _j.isIE7 && /src|href|action/.test( name ) ) {
-            // IE7- returns canonical URLs, thus use fallback
-            value = value.match(/\/([^\/]+)$/)[1];
+            if ( _j.trim( value ) ) {
+              // IE7- returns canonical URLs, thus use fallback
+              value = value.match( /\/([^\/]+)$/ )[ 1 ];
+            }
           }
+        } else {
+          // maybe some browser return undefined, thus fix it
+          value = null;
         }
         return value;
-       },
+      },
 
       /**
        * Check if an element has a given name
@@ -150,20 +155,20 @@
        */
       hasSelector: function( elem, selector ) {
         var chunker,
-          match = selector.match(/(\.?[^\[]+\[[^\]]+\])|(\.)/);
+          match = selector.match( /(\.?[^\[]+\[[^\]]+\])|(\.)/ );
 
         if ( match !== null ) {
           // .toto or .toto[href="bar"] or toto[href="foo"]
           if ( match[1] ) {
             // .toto[href] or bar[href] or bar[href="dsds"] : by attribute
             chunker = /([^\[]+)\[([^=\]]+)(?:="([^"]+))?/;
-            match = selector.match(chunker);
-            if ( /\./.test(match[1]) ) {
+            match = selector.match( chunker );
+            if ( /\./.test( match[1] ) ) {
               // .toto[href] or .toto[href="bar"]
               if ( !match[3] ) {
                 // .toto[href]
-                return _j.hasClassName( elem, match[1].slice(1) )  &&
-                       !!_j.getAttribute( elem, match[2] );
+                return _j.hasClassName( elem, match[1].slice(1) ) &&
+                       _j.getAttribute( elem, match[2] ) !== null;
               } else {
                 // .toto[href="bar"]
                 return _j.hasClassName( elem, match[1].slice(1) ) &&
@@ -174,7 +179,7 @@
               if ( !match[3] ) {
                 // bar[href]
                 return _j.hasName( elem, match[1] ) &&
-                       !!_j.getAttribute( elem, match[2] );
+                       _j.getAttribute( elem, match[2] ) !== null;
               } else {
                 // bar[href="bar"]
                 return _j.hasName( elem, match[1] ) &&
@@ -197,7 +202,7 @@
         } else {
           // byid or bytagname
           // '#foo' or div' or 'p'
-          match = selector.match(/#([^#]+)/);
+          match = selector.match( /#([^#]+)/ );
           if ( match !== null ) {
             // #foo
             return _j.getAttribute( elem, 'id' ) === match[1];
@@ -244,10 +249,9 @@
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
       getElementsByClassName: function( selector, elem ) {
-        var elems, l,
+        var elems, l, elemsA,
           i = 0,
-          elemsA,
-          match = selector.match(/([^ ]+)?\.([^ ]+)/);
+          match = selector.match( /([^ ]+)?\.([^ ]+)/ );
 
         elem = elem || document;
 
@@ -268,10 +272,10 @@
         elemsA = _j.toArray( elems );
 
         for ( l = elemsA.length; i < l; i += 1 ) {
-          if ( !_j.hasClassName( elemsA[i], selector ) ) {
+          if ( !_j.hasClassName( elemsA[ i ], selector ) ) {
             elemsA.splice( i, 1 );
             i -= 1;
-            l = elemsA.length;
+            l -= 1;
           }
         }
         return elemsA;
@@ -290,33 +294,31 @@
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
       getElementsByAttribute: function( selector, elem ) {
-        var elems, l, iElem,
+        var elems, l, iElem, elemsA,
           i = 0,
-          elemsA,
           chunker = /([^\[]+)\[([^=\]]+)(?:="([^"]+))?/,
           match = selector.match( chunker );
 
         elem = elem || document;
 
         if ( match !== null ) {
-          if ( /\./.test(match[1]) ) {
+          if ( /\./.test( match[1] ) ) {
             // by classname .foo[href]
             elems = _j.getElementsByClassName( match[1].slice(1), elem );
           } else {
             //by tag  foo[href]
-            elems = elem.getElementsByTagName(match[1]);
+            elems = elem.getElementsByTagName( match[1] );
           }
 
           // filter the set on the attribute
           // Array#splice has cool perfs: http://jsperf.com/splice-vs-custom-fn
 
-          // convert to Array
           elemsA = _j.toArray( elems );
 
           for ( l = elemsA.length; i < l ; i += 1 ) {
             iElem = elemsA[ i ];
-            if ( _j.getAttribute( iElem, match[2] ) == null ) {
-              // attribute null or undefined, remove elem from set
+            if ( _j.getAttribute( iElem, match[2] ) === null ) {
+              // attribute null, remove elem from set
               elemsA.splice( i, 1 );
               i -= 1;
             } else {
@@ -344,19 +346,19 @@
        * @returns {Array} Elements that match the selector or empty array if mismatch
        */
       querySelectorAll: function( selector ) {
-        var iBottom,
+        var iBottom, stepsL,
           candidatesSelector, candidates, candidatesL,
           category, parent, directChild, i, j,
           chunker = /[^ \[]+\[[^ \]]+\]|(?:[^ .]+)?\.[^ ]+|[^ ]+/g,
-          steps = selector.match( chunker ),
-          stepsL = steps.length;
+          steps = selector.match( chunker );
 
-        if ( stepsL ) {
+        if ( steps ) {
           // valid selector
+          stepsL = steps.length;
 
           // get candidates array data, iff any
           candidatesSelector = steps[ stepsL - 1 ];
-          category = candidatesSelector.match(/#([^ ]+)|([^\[]+\[[^\]]+\])|(\.)/);
+          category = candidatesSelector.match( /#([^ ]+)|([^\[]+\[[^\]]+\])|(\.)/ );
           candidates = category ?
                  ( category[1] && [ document.getElementById( category[1] ) ] ) ||
                  ( category[2] && _j.getElementsByAttribute( candidatesSelector ) ) ||
@@ -370,7 +372,7 @@
             candidatesL = candidates.length;
             i = 0;
             // update the steps array
-            steps = steps.slice(0, -1);
+            steps = steps.slice( 0, -1 );
             j = iBottom = steps.length - 1;
 
             for ( ; i < candidatesL; i += 1, j = iBottom ) {
@@ -404,7 +406,7 @@
                 // candidate don't match:
                 // remove it & refresh loop props before next iteration
                 candidates.splice( i, 1 );
-                candidatesL = candidates.length;
+                candidatesL -= 1;
                 i -= 1;
               }
             }
@@ -445,9 +447,9 @@
     constructor: jArgon,
 
     /**
-     * Check if jargon instance has a given element's name
-     * If the jargon instance contains multiple elements, there will be a<br />
-     * boolean for each of them into the returned array
+     * Check if a jargon instance has a given element's name.
+     * If the jargon instance contains multiple elements, an array will be return<br />
+     * containing a boolean for each elements
      * @example
      * // Valid name:
      * 'div'
@@ -462,9 +464,9 @@
     },
 
     /**
-     * Check if jargon instance has a given class name
-     * If the jargon instance contains multiple elements, there will be a<br />
-     * boolean for each of them into the returned array
+     * Check if a jargon instance has a given class name.
+     * If the jargon instance contains multiple elements, an array will be return<br />
+     * containing a boolean for each elements
      * @example
      * // Valid class name:
      * 'foo'
@@ -479,9 +481,9 @@
     },
 
     /**
-     * Check if jargon instance has a given selector
-     * If the jargon instance contains multiple elements, there will be a<br />
-     * boolean for each of them into the returned array
+     * Check if a jargon instance has a given selector
+     * If the jargon instance contains multiple elements, an array will be return<br />
+     * containing a boolean for each elements
      * @example
      * // Valid selectors are :
      * '#foo', 'div', '.foo', '.foo[href]', 'div[href]', 'div.foo', 
