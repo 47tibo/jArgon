@@ -18,14 +18,16 @@
     _j,
     arrayProto = Array.prototype,
     stringProto = String.prototype,
-    // Array#concat way behind Array.proto.push.apply in FF, see:
-    // http://jsperf.com/array-prototype-push-apply-vs-concat
-    _concat = arrayProto.push;
+    _push = arrayProto.push,
+    _slice = arrayProto.slice;
 
   // Jargon Initializer
   _j = jArgon  = function( elems ) {
     this.length = 0;
-    _concat.apply( this, elems );
+    // Array#concat way behind Array.proto.push.apply in FF, see:
+    // http://jsperf.com/array-prototype-push-apply-vs-concat
+    // However, elems must be of type: Array, which is the case here
+    _push.apply( this, elems );
   };
 
   // Utilities, private
@@ -58,10 +60,53 @@
        * @returns {Array} The new array
        */
       toArray: function( pseudoArray ) {
-        var array = [];
-        _concat.apply( array, pseudoArray );
+        var array;
+        try {
+          array = _slice.call( pseudoArray, 0 );
+        } catch( e ) {
+           array = [];
+          // exception thrown & fallback in IE8-
+          _push.apply( array, pseudoArray );
+        }
         return array;
       },
+
+      // Identifies IE7- by URLs cannonical autoconversion
+      // private
+      isIE7: (function() {
+        var url = 'foo.jpg',
+          img = document.createElement('img');
+        img.setAttribute( 'src', url );
+        return url !== img.getAttribute('src');
+      })(),
+
+      // Identifies IE8- by comments elements counting
+      // private
+      isIE8: (function() {
+        var div = document.createElement('div'),
+          comment = document.createComment('hi all!');
+        div.appendChild( comment );
+        return div.getElementsByTagName('*').length === 1;
+      })(),
+
+      /**
+       * Wrapper for the eponymous DOM method, buggy in IE7-
+       * @private
+       * @name getAttribute
+       * @param {Element} elem - The element
+       * @param {String} name - The attribute's name
+       * @returns {String|null} The attribute's value (possibly '') or null if not defined
+       */
+       getAttribute: function( elem, name ) {
+        var value = elem.getAttribute( name );
+        if ( value != null ) {
+          if ( _j.isIE7 && /src|href|action/.test( name ) ) {
+            // IE7- returns canonical URLs, thus use fallback
+            value = value.match(/\/([^\/]+)$/)[1];
+          }
+        }
+        return value;
+       },
 
       /**
        * Check if an element has a given name
@@ -118,22 +163,22 @@
               if ( !match[3] ) {
                 // .toto[href]
                 return _j.hasClassName( elem, match[1].slice(1) )  &&
-                       !!elem.getAttribute( match[2] );
+                       !!_j.getAttribute( elem, match[2] );
               } else {
                 // .toto[href="bar"]
                 return _j.hasClassName( elem, match[1].slice(1) ) &&
-                       elem.getAttribute( match[2] ) === match[3];
+                       _j.getAttribute( elem, match[2] ) === match[3];
               }
             } else {
               // bar[href] or bar[href="bar"]
               if ( !match[3] ) {
                 // bar[href]
                 return _j.hasName( elem, match[1] ) &&
-                       !!elem.getAttribute( match[2] );
+                       !!_j.getAttribute( elem, match[2] );
               } else {
                 // bar[href="bar"]
                 return _j.hasName( elem, match[1] ) &&
-                       elem.getAttribute( match[2] ) === match[3];
+                       _j.getAttribute( elem, match[2] ) === match[3];
               }
             }
           } else {
@@ -155,12 +200,35 @@
           match = selector.match(/#([^#]+)/);
           if ( match !== null ) {
             // #foo
-            return elem.getAttribute('id') === match[1];
+            return _j.getAttribute( elem, 'id' ) === match[1];
           } else {
             // div or p
             return _j.hasName( elem, selector );
           }
         }
+      },
+
+      // Wrapper of getElementsByTagName('*'), buggy on IE8- (return comments
+      // elements too )
+      // @param {Element} [elem] - The root element or default to `document`
+      // @returns {Array} Child elements - except comments elements
+      getAllElements: function( elem ) {
+        var elemsA, l,
+          i = 0,
+          matcher = /comment/;
+
+        elem = elem || document;
+        elemsA = _j.toArray( elem.getElementsByTagName('*') );
+        if ( _j.isIE8 ) {
+          for ( l = elemsA.length; i < l; i +=1 ) {
+            if ( matcher.test( elemsA[ i ].nodeName.toLowerCase() ) ) {
+              elemsA.splice( i, 1 );
+              i -= 1;
+              l -= 1;
+            }
+          }
+        }
+        return elemsA;
       },
 
       /**
@@ -178,7 +246,7 @@
       getElementsByClassName: function( selector, elem ) {
         var elems, l,
           i = 0,
-          elemsA = [],
+          elemsA,
           match = selector.match(/([^ ]+)?\.([^ ]+)/);
 
         elem = elem || document;
@@ -189,15 +257,15 @@
             // div.toto
             elems = elem.getElementsByTagName( match[1] );
           } else {
-            elems = elem.getElementsByTagName( '*' );
+            elems = _j.getAllElements( elem );
           }
           selector =  match[2];
         } else {
           // toto
-          elems = elem.getElementsByTagName( '*' );
+          elems = _j.getAllElements( elem );
         }
 
-        Array.prototype.push.apply( elemsA, elems );
+        elemsA = _j.toArray( elems );
 
         for ( l = elemsA.length; i < l; i += 1 ) {
           if ( !_j.hasClassName( elemsA[i], selector ) ) {
@@ -224,7 +292,7 @@
       getElementsByAttribute: function( selector, elem ) {
         var elems, l, iElem,
           i = 0,
-          elemsA = [],
+          elemsA,
           chunker = /([^\[]+)\[([^=\]]+)(?:="([^"]+))?/,
           match = selector.match( chunker );
 
@@ -241,18 +309,19 @@
 
           // filter the set on the attribute
           // Array#splice has cool perfs: http://jsperf.com/splice-vs-custom-fn
+
           // convert to Array
-          Array.prototype.push.apply( elemsA, elems );
+          elemsA = _j.toArray( elems );
 
           for ( l = elemsA.length; i < l ; i += 1 ) {
             iElem = elemsA[ i ];
-            if ( iElem.getAttribute( match[2] ) == null ) {
+            if ( _j.getAttribute( iElem, match[2] ) == null ) {
               // attribute null or undefined, remove elem from set
               elemsA.splice( i, 1 );
               i -= 1;
             } else {
               // attribute exist, cool for the elem but did the user ask for a value?
-              if ( match[3] && iElem.getAttribute( match[2] ) !== match[3] ) {
+              if ( match[3] && _j.getAttribute( iElem, match[2] ) !== match[3] ) {
                 // the attribute's value ask by user dont match, remove from set
                 elemsA.splice( i, 1 );
                 i -= 1;
@@ -306,7 +375,12 @@
 
             for ( ; i < candidatesL; i += 1, j = iBottom ) {
               parent = candidates[ i ];
-              while ( ( parent = parent.parentNode ) && ( parent.nodeType === 1 ) ) {
+              while ( parent = parent.parentNode ) {
+                if ( parent.nodeType === 9 ) {
+                  // reach the document, ie out of DOM
+                  parent = null;
+                  break;
+                }
                 if ( directChild.test( steps[ j ] ) ) {
                   // '>' selector, jump to the next step
                   // & give the parent only one chance to match
@@ -360,7 +434,7 @@
         var i = 0,
           elems = [];
         for ( ; i < this.length; i += 1 ) {
-          _concat.apply( elems, getElementsFn( selector, this[ i ] ) );
+          _push.apply( elems, getElementsFn( selector, this[ i ] ) );
         }
         return new jArgon( elems );
       }

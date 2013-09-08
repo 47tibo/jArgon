@@ -8,16 +8,17 @@
 <body>
   <div id="qunit"></div>
   <div id="qunit-fixture">
-    <p class="bar">does <strong class="bar">test</strong> will pass??</p>
+    <p class="bar bunk">does <strong class="bunk bar" data-jargon="fuzz/inputs/fuzz.jpg">test</strong> will pass??</p>
     <div id="tutu" class="bar">
       <div id="bar"></div>
       <div>
         <div id="blob">
           <div id="unique">
-            <div class="fuzz" bar="baz">
-              <a href="javascript.js">
+            <div class="fuzz bunk" bar="baz">
+              <div data-jargon="fuzz/inputs/foo.jpg">
                 <span class="jargon"></span>
-              </a>
+              </div>
+              <span><code data-pargon="foo.jpg">pre code!!</code></span>
             </div>
           </div>
         </div>
@@ -27,18 +28,21 @@
     <div class="fuu">
       <div class="bar">
         <span class="jargon"></span>
+        <span><span><code class="bar" data-jargon="fuzz/inputs/fuzz.jpg"> code!!</code></span></span>
       </div>
     </div>
-    <div class="fuu" href="bar">
+    <div class="fuu" data-toby="bar">
       <div class="bar">
-        <img src="" class="jargon" />
+        <img src="foo.jpg" class="jargon" />
+        <img src="zoo.jpg"/>
+        <img src="foo.png" class="jargon" />
       </div>
     </div>
   </div><!-- fixture -->
   <!-- script under test -->
   <script type="text/javascript" src="../vendor/lodash.legacy.js"></script>
   <script type="text/javascript" src="../jargon.js"></script>
-  <!-- Qunit -->
+  <!-- qunit stuff for unit test -->
   <script type="text/javascript" src="http://code.jquery.com/qunit/qunit-1.12.0.js"></script>
   <script type="text/javascript" src="test.js"></script>
 </body>
