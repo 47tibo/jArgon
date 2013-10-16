@@ -18,7 +18,5 @@
   "unused": true,
 
 // environment options
-  "browser": true,
-  // !!! delete it for production !!!
-  "devel": true
+  "browser": true
 }
