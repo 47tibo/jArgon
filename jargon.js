@@ -40,7 +40,26 @@
   };
 
   // Utilities, private
-  _.extend( _j,
+
+  /**
+   * Extend an object with a set a properties
+   * @function extend
+   * @memberof _jArgon
+   * @param {Object} target - The target object to extend
+   * @param {Object} extension - An object containing the new properties
+   * @returns {Object} target - The target object extended
+   */
+  _j.extend = function( target, extension ) {
+      var i;
+      for ( i in extension ) {
+        if ( extension.hasOwnProperty( i ) ) {
+          target[ i ] = extension[ i ];
+        }
+      }
+      return target;
+    };
+
+  _j.extend( _j,
     {
       /**
        * Call native API method if exists, use fallback instead
@@ -427,6 +446,36 @@
         }
       },
 
+      // Mutation functions
+
+      addClassName: function( elem, className ) {
+        if ( !_j.hasClassName( elem, className ) ) {
+          // trim => if it is the element sole classname.
+          elem.className = _j.trim( elem.className += ( ' ' + className ) );
+        }
+        return elem;
+      },
+
+      removeClassName: function( elem, className ) {
+        var classNameChain = ' ' + elem.className + ' ';
+        if ( _j.hasClassName( elem, className ) ) {
+          className = ' ' + className + ' ';
+          elem.className = _j.trim( classNameChain.replace( className, ' ' ) );
+        }
+        return elem;
+      },
+
+      toggleClassName: function( elem, className ) {
+        var classNameChain = ' ' + elem.className + ' ';
+        if ( _j.hasClassName( elem, className ) ) {
+          className = ' ' + className + ' ';
+          elem.className = _j.trim( classNameChain.replace( className, ' ' ) );
+        } else {
+          elem.className = _j.trim( elem.className += ( ' ' + className ) );
+        }
+        return elem;
+      },
+
       // Private Jargon's instances methods, factorize methods behavior
 
       hasAny: function( criterion, checkFn ) {
@@ -434,7 +483,7 @@
           l = this.length,
           match = new Array( l );
         for ( ; i < l; i += 1 ) {
-          match[ i ] = checkFn( this[i], criterion );
+          match[ i ] = checkFn( this[ i ], criterion );
         }
         if ( i === 1 ) {
           match = match[ 0 ];
@@ -449,6 +498,15 @@
           _push.apply( elems, getElementsFn( selector, this[ i ] ) );
         }
         return new jArgon( elems );
+      },
+
+      mutate: function( criterion, mutateFn ) {
+        var i = 0,
+          l = this.length;
+        for ( ; i < l; i += 1 ) {
+          this[ i ] = mutateFn( this[ i ], criterion );
+        }
+        return this;
       }
     });
 
@@ -557,6 +615,53 @@
      */
     getElementsByAttribute: function( selector ) {
       return _j.getElements.call( this, selector, _j.getElementsByAttribute );
+    },
+
+    /**
+     * Add a class name to the elements of a jargon instance.
+     * If the class name already present, do nothing.
+     * @example
+     * // Valid class name:
+     * 'foo'
+     * @public
+     * @function
+     * @name addClassName
+     * @param {String} className - The class name
+     * @returns {jArgon} jArgon object with the updated elements
+     */
+    addClassName: function( className ) {
+      return _j.mutate.call( this, className, _j.addClassName );
+    },
+
+    /**
+     * Remove a class name to the elements of a jargon instance.
+     * If the class name not present, do nothing.
+     * @example
+     * // Valid class name:
+     * 'foo'
+     * @public
+     * @function
+     * @name removeClassName
+     * @param {String} className - The class name
+     * @returns {jArgon} jArgon object with the updated elements
+     */
+    removeClassName: function( className ) {
+      return _j.mutate.call( this, className, _j.removeClassName );
+    },
+
+    /**
+     * Toggle a class name on the elements of a jargon instance.
+     * @example
+     * // Valid class name:
+     * 'foo'
+     * @public
+     * @function
+     * @name toggleClassName
+     * @param {String} className - The class name
+     * @returns {jArgon} jArgon object with the updated elements
+     */
+    toggleClassName: function( className ) {
+      return _j.mutate.call( this, className, _j.toggleClassName );
     }
   };
 
@@ -603,8 +708,9 @@
   };
 
   // ... and expose utilities
-  _.extend( decorator,
+  _j.extend( decorator,
     {
+      extend: _j.extend,
       trim: _j.trim,
       toArray: _j.toArray
     });

@@ -175,3 +175,24 @@ jArgon('.bar').each(function() {
 test( "$el.each(fn);", function() {
   deepEqual( count, 2, 'each method works!!! ');
 });
+
+test( "$el.addClassName('fuzz');", function() {
+  var $blob = jArgon('#blob');
+  $blob.addClassName('fuzzy');
+  deepEqual( $blob.hasClassName('fuzzy'), true, 'addClassName works!!');
+});
+
+test( "$el.removeClassName('fuzz');", function() {
+  var $blob = jArgon('#blob');
+  // test chaining too
+  $blob.addClassName('fuzzy').removeClassName('fuzzy');
+  deepEqual( $blob.hasClassName('fuzzy'), false, 'removeClassName works!!');
+});
+
+test( "$el.toggleClassName('fuzz');", function() {
+  var $blob = jArgon('#blob');
+  $blob.toggleClassName('fuzzy');
+  deepEqual( $blob.hasClassName('fuzzy'), true, 'toggleClassName adding works!!');
+  $blob.toggleClassName('fuzzy');
+  deepEqual( $blob.hasClassName('fuzzy'), false, 'toggleClassName removing works!!');
+});
