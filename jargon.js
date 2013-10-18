@@ -388,7 +388,7 @@
           candidatesSelector = steps[ stepsL - 1 ];
           category = candidatesSelector.match( /#([^ ]+)|([^\[]+\[[^\]]+\])|(\.)/ );
           candidates = category ?
-                 ( category[1] && [ document.getElementById( category[1] ) ] ) ||
+                 ( category[1] && ( document.getElementById( category[1] ) ? [ document.getElementById( category[1] ) ] : [] ) ) ||
                  ( category[2] && _j.getElementsByAttribute( candidatesSelector ) ) ||
                  ( category[3] && _j.getElementsByClassName( candidatesSelector ) ) :
                  _j.toArray( document.getElementsByTagName( candidatesSelector ) );
