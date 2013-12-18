@@ -1,11 +1,11 @@
 /**
- * <h3>JS DOM library</h3>
- * <q>Utilities methods & DOM elements decorator</q>
- * @example
- * jArgon.trim('  a string to trim   ');
+ * #JS DOM library
+ * Utilities methods & DOM elements decorator
+ * ```javascript
+ * jArgon.trim('a string to trim');
  * var jargonObj = jArgon('div > div.foo .bar #jargon');
  * jargonObj.getElementsByAttribute('.fuzz[bar]');
- * @namespace _jArgon
+ * ```
  */
 ;(function( window, document, undefined ) {
   'use strict';
