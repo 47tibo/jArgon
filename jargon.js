@@ -1,11 +1,18 @@
 /**
  * #JS DOM library
  * Utilities methods & DOM elements decorator
+<<<<<<< HEAD
  * ```javascript
  * jArgon.trim('a string to trim');
  * var jargonObj = jArgon('div > div.foo .bar #jargon');
  * jargonObj.getElementsByAttribute('.fuzz[bar]');
  * ```
+=======
+ *
+ *     jArgon.trim('a string to trim');
+ *     var jargonObj = jArgon('div > div.foo .bar #jargon');
+ *     jargonObj.getElementsByAttribute('.fuzz[bar]');
+>>>>>>> f55f76963f7565d85c605f625a09637abb95032c
  */
 ;(function( window, document, undefined ) {
   'use strict';
