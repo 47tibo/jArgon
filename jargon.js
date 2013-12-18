@@ -1,8 +1,9 @@
 /**
- * #JS DOM library
- * Utilities methods & DOM elements decorator
+ * #A tiny JavaScript DOM library
+ * ##Utilities methods & DOM elements decorator
+ * *Examples*
  * ```javascript
- * jArgon.trim('a string to trim');
+ * jArgon.trim('    a string to trim    ');
  * var jargonObj = jArgon('div > div.foo .bar #jargon');
  * jargonObj.getElementsByAttribute('.fuzz[bar]');
  * ```

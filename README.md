@@ -2,12 +2,13 @@
 
 <!-- Start jargon.js -->
 
-#JS DOM library
-Utilities methods &amp; DOM elements decorator
+#A tiny JavaScript DOM library
+##Utilities methods &amp; DOM elements decorator
+*Examples*
 ```javascript
-jArgon.trim(&#39;a string to trim&#39;);
-var jargonObj = jArgon(&#39;div &gt; div.foo .bar #jargon&#39;);
-jargonObj.getElementsByAttribute(&#39;.fuzz[bar]&#39;);
+jArgon.trim('    a string to trim    ');
+var jargonObj = jArgon('div > div.foo .bar #jargon');
+jargonObj.getElementsByAttribute('.fuzz[bar]');
 ```
 
 ## extend(target, extension)
