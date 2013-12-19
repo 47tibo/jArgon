@@ -14,8 +14,10 @@
  *    * IE7+, Chrome, FF, Opera on Windows 7
  *    * Safari on iOS
  *    * Android Browser, Chrome on Android 4.03
+ *
  * ##Coding convention
  * I use my own `.jshintrc` file, but rules similar to jQuery's
+ *
  * ##Documentation:
  * JSDoc, [markdox](https://github.com/cbou/markdox) for generating README.md
  */
@@ -80,7 +82,7 @@
   _j.extend( _j,
     {
       /**
-       * Call native API method if exists, use fallback instead
+       * Call native API method if exists, use fallback otherwise
        * @function trim
        * @memberof _jArgon
        * @param {String} str - The string to trim
@@ -704,11 +706,12 @@
 
   /**
    * ###jArgon initializer
-   * Query document's elements on a CSS selector chain and return
-   * a jArgon instance which wraps matching elements.
-   * *Based on a "document only bottom-up algorithm"*
-   * Or, wrap a single HTMLElement or a NodeList into a jargon instance.
-   * If the selector mismatch or if the element unvalid, an empty jArgon object is returned.
+   * Use cases:
+   *    * Query document's elements on a CSS selector chain and return
+   *      a jArgon instance which wraps matching elements. *Based on a "document only bottom-up algorithm"*
+   *    * Wrap a single HTMLElement or a NodeList into a jArgon instance.
+   * 
+   * If the selector mismatch or if the element is unvalid, an empty jArgon object is returned.
    * ```javascript
    * var jargonObj;
    * // a valid selector chain:
