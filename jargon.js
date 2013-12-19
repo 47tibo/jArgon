@@ -1,12 +1,23 @@
 /**
  * #A tiny JavaScript DOM library
- * ##Utilities methods & DOM elements decorator
- * *Examples*
+ * **Utilities methods & DOM elements decorator**
+ * ##Examples
  * ```javascript
  * jArgon.trim('    a string to trim    ');
  * var jargonObj = jArgon('div > div.foo .bar #jargon');
  * jargonObj.getElementsByAttribute('.fuzz[bar]');
  * ```
+ * ##Test suite
+ * Use Qunit, see `test/` directory.
+ * Tested under:
+ *    * FF, Chrome on Ubuntu 12.04
+ *    * IE7+, Chrome, FF, Opera on Windows 7
+ *    * Safari on iOS
+ *    * Android Browser, Chrome on Android 4.03
+ * ##Coding convention
+ * I use my own `.jshintrc` file, but rules similar to jQuery's
+ * ##Documentation:
+ * JSDoc, [markdox](https://github.com/cbou/markdox) for generating README.md
  */
 ;(function( window, document, undefined ) {
   'use strict';
@@ -44,11 +55,17 @@
 
   /**
    * Extend an object with a set a properties
+   * ##Example
+   * ```javascript
+   * var o = { prop1: 'hello' };
+   * jArgon.extend( o, { prop2: 'world' } );
+   * // o = { prop1: 'hello', prop2: 'world' }
+   * ```
    * @function extend
    * @memberof _jArgon
    * @param {Object} target - The target object to extend
    * @param {Object} extension - An object containing the new properties
-   * @returns {Object} target - The target object extended
+   * @return {Object} - The target object extended
    */
   _j.extend = function( target, extension ) {
       var i;
@@ -67,7 +84,7 @@
        * @function trim
        * @memberof _jArgon
        * @param {String} str - The string to trim
-       * @returns {String} The new trimmed string
+       * @return {String} The new trimmed string
        */
       trim: (function() {
         return stringProto.trim ?
@@ -86,7 +103,7 @@
        * @function toArray
        * @memberof _jArgon
        * @param {PseudoArray} pseudoArray - The pseudoArray to convert
-       * @returns {Array} The new array
+       * @return {Array} The new array
        */
       toArray: function( pseudoArray ) {
         var array;
@@ -118,14 +135,14 @@
         return div.getElementsByTagName('*').length === 1;
       })(),
 
-      /**
-       * Wrapper for the eponymous DOM method, buggy in IE7-
-       * @private
-       * @name getAttribute
-       * @param {Element} elem - The element
-       * @param {String} name - The attribute's name
-       * @returns {String|null} The attribute's value (possibly '') or null if not defined
-       */
+      //
+      // Wrapper for the eponymous DOM method, buggy in IE7-
+      // @private
+      // @name getAttribute
+      // @param {Element} elem - The element
+      // @param {String} name - The attribute's name
+      // @return {String|null} The attribute's value (possibly '') or null if not defined
+      //
       getAttribute: function( elem, name ) {
         var value = elem.getAttribute( name );
         if ( value != null ) {
@@ -142,28 +159,28 @@
         return value;
       },
 
-      /**
-       * Check if an element has a given name
-       * Valid name : 'div'
-       * @private
-       * @name hasName
-       * @param {Element} elem - The element to validate
-       * @param {String} name - The element name
-       * @returns {Boolean} True if match, false otherwise
-       */
+      //
+      // Check if an element has a given name
+      // Valid name : 'div'
+      // @private
+      // @name hasName
+      // @param {Element} elem - The element to validate
+      // @param {String} name - The element name
+      // @return {Boolean} True if match, false otherwise
+      //
       hasName: function( elem, name ) {
         return elem.nodeName.toLowerCase() === name;
       },
 
-      /**
-       * Check if an element has a given class name
-       * Valid class name : 'foo'
-       * @private
-       * @name hasClassName
-       * @param {Element} elem - The element to validate
-       * @param {String} className - The class name
-       * @returns {Boolean} True if match, false otherwise
-       */
+      //
+      // Check if an element has a given class name
+      // Valid class name : 'foo'
+      // @private
+      // @name hasClassName
+      // @param {Element} elem - The element to validate
+      // @param {String} className - The class name
+      // @return {Boolean} True if match, false otherwise
+      //
       hasClassName: function( elem, className ) {
         var classNameChain = ' ' + elem.className + ' ';
         className = ' ' + className + ' ';
@@ -171,17 +188,17 @@
         return classNameChain.indexOf( className ) >= 0;
       },
 
-      /**
-       * Check if an element has a given selector
-       * Valid selectors are :
-       * #foo, div, .foo, .foo[href], div[href], div.foo, 
-       * div[href="bar"], .foo[href="fuzz"]
-       * @private
-       * @name hasSelector
-       * @param {Element} elem - The element to validate
-       * @param {String} selector - The selector
-       * @returns {Boolean} True if match, false otherwise
-       */
+      //
+      // Check if an element has a given selector
+      // Valid selectors are :
+      // #foo, div, .foo, .foo[href], div[href], div.foo, 
+      // div[href="bar"], .foo[href="fuzz"]
+      // @private
+      // @name hasSelector
+      // @param {Element} elem - The element to validate
+      // @param {String} selector - The selector
+      // @return {Boolean} True if match, false otherwise
+      //
       hasSelector: function( elem, selector ) {
         var chunker,
           match = selector.match( /(\.?[^\[]+\[[^\]]+\])|(\.)/ );
@@ -245,7 +262,7 @@
       // Wrapper of getElementsByTagName('*'), buggy on IE8- (return comments
       // elements too )
       // @param {Element} [elem] - The root element or default to `document`
-      // @returns {Array} Child elements - except comments elements
+      // @return {Array} Child elements - except comments elements
       getAllElements: function( elem ) {
         var elemsA, l,
           i = 0,
@@ -265,18 +282,18 @@
         return elemsA;
       },
 
-      /**
-       * Returns an array of elements that match the given class name
-       * Return an empty array if mismatch
-       * Valid selectors are :
-       * 'div.foo' or '.foo' or 'foo'
-       * @private
-       * @name getElementsByClassName
-       * @param {String} selector - The selector
-       * @param {Element} [elem] - The root element on which launch the search
-       * Default to `document`
-       * @returns {Array} Elements that match the selector or empty array if mismatch
-       */
+      //
+      // Returns an array of elements that match the given class name
+      // Return an empty array if mismatch
+      // Valid selectors are :
+      // 'div.foo' or '.foo' or 'foo'
+      // @private
+      // @name getElementsByClassName
+      // @param {String} selector - The selector
+      // @param {Element} [elem] - The root element on which launch the search
+      // Default to `document`
+      // @return {Array} Elements that match the selector or empty array if mismatch
+      //
       getElementsByClassName: function( selector, elem ) {
         var elems, l, elemsA,
           i = 0,
@@ -310,18 +327,18 @@
         return elemsA;
       },
 
-      /**
-       * Returns an array of elements that match the given attribute
-       * Return an empty array if mismatch
-       * Valid selectors are :
-       * 'a[href]' or '.foo[href]' or 'a[href="bar"]' or '.foo[href="bar"]'
-       * @private
-       * @name getElementsByAttribute
-       * @param {String} selector - The selector
-       * @param {Element} [elem] - The root element on which launch the search
-       * Default to `document`
-       * @returns {Array} Elements that match the selector or empty array if mismatch
-       */
+      //
+      // Returns an array of elements that match the given attribute
+      // Return an empty array if mismatch
+      // Valid selectors are :
+      // 'a[href]' or '.foo[href]' or 'a[href="bar"]' or '.foo[href="bar"]'
+      // @private
+      // @name getElementsByAttribute
+      // @param {String} selector - The selector
+      // @param {Element} [elem] - The root element on which launch the search
+      // Default to `document`
+      // @return {Array} Elements that match the selector or empty array if mismatch
+      //
       getElementsByAttribute: function( selector, elem ) {
         var elems, l, iElem, elemsA,
           i = 0,
@@ -365,15 +382,15 @@
         return elemsA;
       },
 
-      /**
-       * Query document's elements that match a selector
-       * Based on a "document only bottom-up algorithm"
-       * Valid selectors are :
-       * 'div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon'
-       * @private
-       * @param {String} selector - The selector
-       * @returns {Array} Elements that match the selector or empty array if mismatch
-       */
+      //
+      // Query document's elements that match a selector
+      // Based on a "document only bottom-up algorithm"
+      // Valid selectors are :
+      // 'div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon'
+      // @private
+      // @param {String} selector - The selector
+      // @return {Array} Elements that match the selector or empty array if mismatch
+      //
       querySelectorAll: function( selector ) {
         var iBottom, stepsL,
           candidatesSelector, candidates, candidatesL,
@@ -518,11 +535,17 @@
     /**
      * Iterate over a jargon instance, executing a function for each elements.
      * The function context is a jargon object wrapping the element itself.
+     * ###Example
+     * ```javascript
+     * // add classname 'fuzz' on all p tags
+     * jArgon('p').each(function() {
+     *   this.addClassName('fuzz');
+     * });
+     * ```
      * @public
-     * @function
-     * @name each
+     * @method each
      * @param {Function} fn - The function which will be executed recursively
-     * @returns {jArgon} The jargon instance on which the method is called
+     * @return {jArgon} The jargon instance on which the method is called
      */
      each: function( fn ) {
       var i = 0, l;
@@ -534,16 +557,16 @@
 
     /**
      * Check if a jargon instance has a given element's name.
-     * If the jargon instance contains multiple elements, an array will be return<br />
+     * If the jargon instance contains multiple elements, an array will be return
      * containing a boolean for each elements
-     * @example
-     * // Valid name:
-     * 'div'
+     * ###Example
+     * ```javascript
+     * jArgon('.current').hasName('div');
+     * ```
      * @public
-     * @function
-     * @name hasName
+     * @method hasName
      * @param {String} name - The element name
-     * @returns {Array|Boolean} True if match, false otherwise
+     * @return {Array|Boolean} True if match, false otherwise
      */
     hasName: function( name ) {
       return _j.hasAny.call( this, name, _j.hasName );
@@ -551,16 +574,17 @@
 
     /**
      * Check if a jargon instance has a given class name.
-     * If the jargon instance contains multiple elements, an array will be return<br />
+     * If the jargon instance contains multiple elements, an array will be return
      * containing a boolean for each elements
-     * @example
-     * // Valid class name:
-     * 'foo'
+     * ###Example
+     * ```javascript
+     * jArgon('#nav-bar').hasClassName('hidden');
+     * ```
      * @public
      * @function
      * @name hasClassName
      * @param {String} className - The class name
-     * @returns {Array|Boolean} True if match, false otherwise
+     * @return {Array|Boolean} True if match, false otherwise
      */
     hasClassName: function( className ) {
       return _j.hasAny.call( this, className, _j.hasClassName );
@@ -568,17 +592,19 @@
 
     /**
      * Check if a jargon instance has a given selector
-     * If the jargon instance contains multiple elements, an array will be return<br />
+     * If the jargon instance contains multiple elements, an array will be return
      * containing a boolean for each elements
-     * @example
-     * // Valid selectors are :
-     * '#foo', 'div', '.foo', '.foo[href]', 'div[href]', 'div.foo', 
-     * 'div[href="bar"]', '.foo[href="fuzz"]'
+     * ###Example
+     * ```javascript
+     * jArgon('a').hasSelector('.foo[href="fuzz"]');
+     * // Supported selectors are :
+     * // '#foo', 'div', '.foo', '.foo[href]', 'div[href]', 'div.foo', 
+     * // 'div[href="bar"]', '.foo[href="fuzz"]'
+     * ```
      * @public
-     * @function
-     * @name hasSelector
+     * @method hasSelector
      * @param {String} selector - The selector
-     * @returns {Array|Boolean} True if match, false otherwise
+     * @return {Array|Boolean} True if match, false otherwise
      */
     hasSelector: function( selector ) {
       return _j.hasAny.call( this, selector, _j.hasSelector );
@@ -586,16 +612,20 @@
 
     /**
      * Get the child elements of a jargon instance which match a class name.
-     * If the jargon instance contains multiple elements, the resulting <br />
+     * If the jargon instance contains multiple elements, the resulting
      * child elements are merged into a single array.
-     * @example
+     * ###Example
+     * ```javascript
+     * var ulElem = jArgon('ul');
+     * // return children li elements with class 'current'
+     * ulElem.getElementsByClassName('li.current');
      * // Valid selectors are :
-     * 'div.foo' or '.foo' or 'foo'
+     * // 'div.foo' or '.foo' or 'foo'
+     * ```
      * @public
-     * @function
-     * @name getElementsByClassName
+     * @method getElementsByClassName
      * @param {String} selector - The selector
-     * @returns {jArgon} jArgon object containing matching elements
+     * @return {jArgon} jArgon object containing matching elements
      */
     getElementsByClassName: function( selector ) {
       return _j.getElements.call( this, selector, _j.getElementsByClassName );
@@ -603,16 +633,20 @@
 
     /**
      * Get the child elements of a jargon instance which match an attribute.
-     * If the jargon instance contains multiple elements, the resulting <br />
+     * If the jargon instance contains multiple elements, the resulting
      * child elements are merged into a single array.
-     * @example
+     * ###Example
+     * ```javascript
+     * var artElem = jArgon('article');
+     * // return children a elements with href="#"
+     * artElem.getElementsByAttribute('a[href="#"]');
      * // Valid selectors are :
-     * 'a[href]' or '.foo[href]' or 'a[href="bar"]' or '.foo[href="bar"]'
+     * // 'a[href]' or '.foo[href]' or 'a[href="bar"]' or '.foo[href="bar"]'
+     * ```
      * @public
-     * @function
-     * @name getElementsByAttribute
+     * @method getElementsByAttribute
      * @param {String} selector - The selector
-     * @returns {jArgon} jArgon object containing matching elements
+     * @return {jArgon} jArgon object containing matching elements
      */
     getElementsByAttribute: function( selector ) {
       return _j.getElements.call( this, selector, _j.getElementsByAttribute );
@@ -621,14 +655,14 @@
     /**
      * Add a class name to the elements of a jargon instance.
      * If the class name already present, do nothing.
-     * @example
+     * ```javascript
      * // Valid class name:
-     * 'foo'
+     * // 'foo'
+     * ```
      * @public
-     * @function
-     * @name addClassName
+     * @method addClassName
      * @param {String} className - The class name
-     * @returns {jArgon} jArgon object with the updated elements
+     * @return {jArgon} jArgon object with the updated elements
      */
     addClassName: function( className ) {
       return _j.mutate.call( this, className, _j.addClassName );
@@ -637,14 +671,14 @@
     /**
      * Remove a class name to the elements of a jargon instance.
      * If the class name not present, do nothing.
-     * @example
+     * ```javascript
      * // Valid class name:
-     * 'foo'
+     * // 'foo'
+     * ```
      * @public
-     * @function
-     * @name removeClassName
+     * @method removeClassName
      * @param {String} className - The class name
-     * @returns {jArgon} jArgon object with the updated elements
+     * @return {jArgon} jArgon object with the updated elements
      */
     removeClassName: function( className ) {
       return _j.mutate.call( this, className, _j.removeClassName );
@@ -652,14 +686,14 @@
 
     /**
      * Toggle a class name on the elements of a jargon instance.
-     * @example
+     * ```javascript
      * // Valid class name:
-     * 'foo'
+     * // 'foo'
+     * ```
      * @public
-     * @function
-     * @name toggleClassName
+     * @method toggleClassName
      * @param {String} className - The class name
-     * @returns {jArgon} jArgon object with the updated elements
+     * @return {jArgon} jArgon object with the updated elements
      */
     toggleClassName: function( className ) {
       return _j.mutate.call( this, className, _j.toggleClassName );
@@ -669,13 +703,13 @@
   // Use a decorator to closure jArgon ...
 
   /**
-   * <strong>jArgon initializer</strong><br />
+   * ###jArgon initializer
    * Query document's elements on a CSS selector chain and return
-   * a jArgon instance which wraps matching elements.<br />
-   * - Based on a "document only bottom-up algorithm" -<br />
-   * Or, wrap a single HTMLElement or a NodeList into a jargon instance.<br />
+   * a jArgon instance which wraps matching elements.
+   * *Based on a "document only bottom-up algorithm"*
+   * Or, wrap a single HTMLElement or a NodeList into a jargon instance.
    * If the selector mismatch or if the element unvalid, an empty jArgon object is returned.
-   * @example
+   * ```javascript
    * var jargonObj;
    * // a valid selector chain:
    * jargonObj = jArgon('div > div.foo .bar .fuzz[bar] > a[href="javascript.html"] #jargon');
@@ -683,10 +717,10 @@
    * jargonObj = jArgon( elem );
    * // elems is a NodeList
    * jargonObj = jArgon( elems );
-   * @function
-   * @name jArgon
+   * ```
+   * @function jArgon
    * @param {String|HTMLElement|NodeList} selector - The selector
-   * @returns {jArgon} jArgon object containing matching elements or the passed element(s)
+   * @return {jArgon} jArgon object containing matching elements or the passed element(s)
    */
   decorator = function( selector ) {
     if ( typeof selector === 'string' ) {
